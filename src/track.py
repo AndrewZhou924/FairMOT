@@ -52,6 +52,11 @@ def eval_seq(opt, dataloader, data_type, result_filename, save_dir=None, show_im
     timer = Timer()
     results = []
     frame_id = 0
+    
+    '''
+    img:  Normalized RGB image
+    img0: BGR image
+    '''
     for path, img, img0 in dataloader:
         if frame_id % 20 == 0:
             logger.info('Processing frame {} ({:.2f} fps)'.format(frame_id, 1. / max(1e-5, timer.average_time)))
@@ -59,7 +64,13 @@ def eval_seq(opt, dataloader, data_type, result_filename, save_dir=None, show_im
         # run tracking
         timer.tic()
         blob = torch.from_numpy(img).cuda().unsqueeze(0)
+        # print("\n==> blob.size", blob.size()) 1, 3, 608, 1088
+        
+        '''
+        tracker update
+        '''
         online_targets = tracker.update(blob, img0)
+        
         online_tlwhs = []
         online_ids = []
         for t in online_targets:
@@ -69,6 +80,7 @@ def eval_seq(opt, dataloader, data_type, result_filename, save_dir=None, show_im
             if tlwh[2] * tlwh[3] > opt.min_box_area and not vertical:
                 online_tlwhs.append(tlwh)
                 online_ids.append(tid)
+                
         timer.toc()
         # save results
         results.append((frame_id + 1, online_tlwhs, online_ids))
@@ -97,6 +109,8 @@ def main(opt, data_root='/data/MOT16/train', det_root=None, seqs=('MOT16-05',), 
     n_frame = 0
     timer_avgs, timer_calls = [], []
     for seq in seqs:
+        print("==> [main] seq=", seq) # e.g KITTI-13
+        
         output_dir = os.path.join(data_root, '..', 'outputs', exp_name, seq) if save_images or save_videos else None
         logger.info('start seq: {}'.format(seq))
         dataloader = datasets.LoadImages(osp.join(data_root, seq, 'img1'), opt.img_size)
@@ -139,14 +153,19 @@ def main(opt, data_root='/data/MOT16/train', det_root=None, seqs=('MOT16-05',), 
 if __name__ == '__main__':
     os.environ['CUDA_VISIBLE_DEVICES'] = '0'
     opt = opts().init()
+    # opt.data_dir = ""
+    print("==> opt.data_dir: ", opt.data_dir)
 
     if not opt.val_mot16:
-        seqs_str = '''KITTI-13
-                      KITTI-17
-                      ADL-Rundle-6
-                      PETS09-S2L1
-                      TUD-Campus
-                      TUD-Stadtmitte'''
+        # modify: for test
+        
+        # seqs_str = '''KITTI-13
+        #               KITTI-17
+        #               ADL-Rundle-6
+        #               PETS09-S2L1
+        #               TUD-Campus
+        #               TUD-Stadtmitte'''
+        seqs_str = '''KITTI-13'''     
         data_root = os.path.join(opt.data_dir, 'MOT15/images/train')
     else:
         seqs_str = '''MOT16-02
