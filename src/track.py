@@ -80,12 +80,36 @@ def eval_seq(opt, dataloader, data_type, result_filename, save_dir=None, show_im
             if tlwh[2] * tlwh[3] > opt.min_box_area and not vertical:
                 online_tlwhs.append(tlwh)
                 online_ids.append(tid)
-                
-        print("==> [track.eval_seq] len(online_tlwhs):", len(online_tlwhs))
-        print("==> [track.eval_seq] online_tlwhs[0]:", online_tlwhs[0])
-        print("==> [track.eval_seq] online_ids[0]:", online_ids[0])
+            
+        ''' 
+        print("==> [track.eval_seq] tracker's output-> online_targets:", online_targets)
+        try:
+            print("==> [track.eval_seq] len(online_tlwhs):", len(online_tlwhs))
+            print("==> [track.eval_seq] online_tlwhs[0]:", online_tlwhs[0])
+            print("==> [track.eval_seq] online_ids[0]:", online_ids[0])
+        except:
+            pass
         
-
+        partial output:
+        ==> [multi-tracker.update] len(output_stracks): 5
+        ==> [track.eval_seq] tracker's output-> online_targets: [OT_1_(1-13), OT_2_(1-13), OT_3_(1-13), OT_20_(10-13), OT_7_(2-13)]
+        ==> [track.eval_seq] len(online_tlwhs): 5
+        ==> [track.eval_seq] online_tlwhs[0]: [     802.38      163.64      24.074      57.376]
+        ==> [track.eval_seq] online_ids[0]: 1
+        
+        ==> [multi-tracker.update] len(output_stracks): 7
+        ==> [track.eval_seq] tracker's output-> online_targets: [OT_1_(1-14), OT_2_(1-14), OT_3_(1-14), OT_20_(10-14), OT_7_(2-14), OT_23_(13-14), OT_13_(4-14)]
+        ==> [track.eval_seq] len(online_tlwhs): 7
+        ==> [track.eval_seq] online_tlwhs[0]: [     809.96      163.69      25.305      60.319]
+        ==> [track.eval_seq] online_ids[0]: 1
+        
+        ==> [multi-tracker.update] len(output_stracks): 7
+        ==> [track.eval_seq] tracker's output-> online_targets: [OT_1_(1-15), OT_2_(1-15), OT_3_(1-15), OT_20_(10-15), OT_7_(2-15), OT_23_(13-15), OT_19_(10-15)]
+        ==> [track.eval_seq] len(online_tlwhs): 7
+        ==> [track.eval_seq] online_tlwhs[0]: [     818.46       164.4      26.832      63.971]
+        ==> [track.eval_seq] online_ids[0]: 1
+        '''
+        
         timer.toc()
         # save results
         results.append((frame_id + 1, online_tlwhs, online_ids))

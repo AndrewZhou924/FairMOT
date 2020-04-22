@@ -247,21 +247,46 @@ class JDETracker(object):
             id_feature = id_feature.squeeze(0)
             id_feature = id_feature.cpu().numpy()
 
+        '''
         print("==> [multi-tracker.update] dets:", dets)
-        print("==> [multi-tracker.update] dets.size 1:", dets.size())
+        print("==> [multi-tracker.update] dets.size 1:", dets.size()) # [1, 128, 6]
+        '''
+        
         dets = self.post_process(dets, meta)
-        print("==> [multi-tracker.update] dets.size 2:", dets.size())
         dets = self.merge_outputs([dets])[1]
-        print("==> [multi-tracker.update] dets.size 3:", dets.size())
-
+        
+        '''
+        print("==> [multi-tracker.update] len(dets):", len(dets)) # 128
+        print("==> [multi-tracker.update] len(dets[0]):", len(dets[0])) # 5
+        
+        dets: [[     761.85      169.75      779.43      210.57     0.76028]
+                [     746.16      167.86      763.81      209.36     0.70138]
+                [     520.55      170.32      533.13      198.51     0.44955]
+                [     678.15      170.84       687.6      190.35     0.42314]
+                [      706.3      172.26         723      207.56     0.41279]
+                [     731.59       168.2      742.89      194.59     0.40816]
+                [     345.91      188.76      369.22      234.64     0.38459]
+                [     434.66      170.01       448.6      199.26     0.37619]
+                [     212.57      177.95      231.56      228.84     0.26836]
+                [      549.7      168.05      560.64      193.19     0.23459]
+                ...
+                ]
+        print("self.opt.conf_thres:", self.opt.conf_thres) # 0.4
+        '''
+        
         remain_inds = dets[:, 4] > self.opt.conf_thres
         dets = dets[remain_inds]
         id_feature = id_feature[remain_inds]
 
-        print("==> [multi-tracker.update] dets.size 4:", dets.size())
-        print("==> [multi-tracker.update] len(id_feature):",  id_feature.size())
-        print("==> [multi-tracker.update] size for each id_feature:",  id_feature[0].size())
-
+        '''
+        print("==> [multi-tracker.update] len(dets):", len(dets)) # 6
+        print("==> [multi-tracker.update] len(id_feature):",  len(id_feature)) # 6
+        print("==> [multi-tracker.update] id_feature[0]:",  id_feature.size) # 3072 
+        3072 = 6 * 512
+        embedding dimension: 512
+        '''
+        
+        
         # vis
         '''
         for i in range(0, dets.shape[0]):
@@ -273,7 +298,27 @@ class JDETracker(object):
         cv2.waitKey(0)
         id0 = id0-1
         '''
-
+        
+        '''
+        print("==> [multi-tracker.update] dets[:, :5]:", dets[:, :5])
+        print("==> [multi-tracker.update] id_feature:", id_feature)
+        print("==> [multi-tracker.update] len(id_feature)", len(id_feature))
+        
+        ==> [multi-tracker.update] dets[:, :5]: [[     761.85      169.75      779.43      210.57     0.76028]
+        [     746.16      167.86      763.81      209.36     0.70138]
+        [     520.55      170.32      533.13      198.51     0.44955]
+        [     678.15      170.84       687.6      190.35     0.42314]
+        [      706.3      172.26         723      207.56     0.41279]
+        [     731.59       168.2      742.89      194.59     0.40816]]
+        ==> [multi-tracker.update] id_feature: [[   0.047802    0.033811   0.0041801 ...   -0.018475   -0.014819    0.010965]
+        [   0.090996    0.015452    0.020774 ...   -0.017812   -0.013593    0.016779]
+        [  -0.023971    0.084845     0.10603 ...   -0.063187    0.063411   -0.012202]
+        [   0.050601    0.063119    0.070075 ...   -0.063469   0.0026391    0.051197]
+        [   0.090193    0.036841    0.045577 ...   -0.024319   -0.075271    0.017419]
+        [   0.014926    0.089218     0.07839 ...    -0.09095   0.0066383    0.076563]]
+        ==> [multi-tracker.update] len(id_feature) 6
+        '''
+        
         if len(dets) > 0:
             '''Detections'''
             # put dets and id_feature to STrack
@@ -379,7 +424,7 @@ class JDETracker(object):
         logger.debug('Lost: {}'.format([track.track_id for track in lost_stracks]))
         logger.debug('Removed: {}'.format([track.track_id for track in removed_stracks]))
 
-        print("==> [multi-tracker.update] len(output_stracks):",  len(output_stracks))
+        # print("==> [multi-tracker.update] len(output_stracks):",  len(output_stracks))
         return output_stracks
 
 
