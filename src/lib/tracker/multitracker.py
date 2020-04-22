@@ -12,9 +12,7 @@ from tracking_utils.kalman_filter import KalmanFilter
 from tracking_utils.log import logger
 from tracking_utils.utils import *
 from utils.post_process import ctdet_post_process
-
 from .basetrack import BaseTrack, TrackState
-
 
 class STrack(BaseTrack):
     shared_kalman = KalmanFilter()
@@ -171,6 +169,7 @@ class JDETracker(object):
             opt.device = torch.device('cuda')
         else:
             opt.device = torch.device('cpu')
+        
         print('Creating model...')
         self.model = create_model(opt.arch, opt.heads, opt.head_conv)
         self.model = load_model(self.model, opt.load_model)
@@ -248,12 +247,20 @@ class JDETracker(object):
             id_feature = id_feature.squeeze(0)
             id_feature = id_feature.cpu().numpy()
 
+        print("==> [multi-tracker.update] dets:", dets)
+        print("==> [multi-tracker.update] dets.size 1:", dets.size())
         dets = self.post_process(dets, meta)
+        print("==> [multi-tracker.update] dets.size 2:", dets.size())
         dets = self.merge_outputs([dets])[1]
+        print("==> [multi-tracker.update] dets.size 3:", dets.size())
 
         remain_inds = dets[:, 4] > self.opt.conf_thres
         dets = dets[remain_inds]
         id_feature = id_feature[remain_inds]
+
+        print("==> [multi-tracker.update] dets.size 4:", dets.size())
+        print("==> [multi-tracker.update] len(id_feature):",  id_feature.size())
+        print("==> [multi-tracker.update] size for each id_feature:",  id_feature[0].size())
 
         # vis
         '''
@@ -269,6 +276,8 @@ class JDETracker(object):
 
         if len(dets) > 0:
             '''Detections'''
+            # put dets and id_feature to STrack
+            # init new STrack
             detections = [STrack(STrack.tlbr_to_tlwh(tlbrs[:4]), tlbrs[4], f, 30) for
                           (tlbrs, f) in zip(dets[:, :5], id_feature)]
         else:
@@ -370,6 +379,7 @@ class JDETracker(object):
         logger.debug('Lost: {}'.format([track.track_id for track in lost_stracks]))
         logger.debug('Removed: {}'.format([track.track_id for track in removed_stracks]))
 
+        print("==> [multi-tracker.update] len(output_stracks):",  len(output_stracks))
         return output_stracks
 
 

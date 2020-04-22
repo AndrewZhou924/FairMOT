@@ -81,6 +81,11 @@ def eval_seq(opt, dataloader, data_type, result_filename, save_dir=None, show_im
                 online_tlwhs.append(tlwh)
                 online_ids.append(tid)
                 
+        print("==> [track.eval_seq] len(online_tlwhs):", len(online_tlwhs))
+        print("==> [track.eval_seq] online_tlwhs[0]:", online_tlwhs[0])
+        print("==> [track.eval_seq] online_ids[0]:", online_ids[0])
+        
+
         timer.toc()
         # save results
         results.append((frame_id + 1, online_tlwhs, online_ids))
